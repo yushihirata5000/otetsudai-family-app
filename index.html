@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f7fbff">
+<link rel="manifest" href="manifest.json">
+<title>おてつだい ちょきんちょう</title>
+<style>
+:root{
+  --ink:#25364a;--muted:#718096;--blue:#4aa8ff;--blueSoft:#e4f3ff;--pink:#ff8fbd;--pinkSoft:#ffe8f1;
+  --green:#55c979;--yellow:#ffd55a;--red:#ff6f78;--card:#fff;--line:#e8edf2;--shadow:0 8px 24px rgba(56,76,100,.10)
+}
+*{box-sizing:border-box} body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;color:var(--ink);background:linear-gradient(180deg,#f3fbff,#fffaf4)}
+.app{max-width:560px;margin:auto;min-height:100vh;padding:16px 14px 96px}
+h1{text-align:center;font-size:24px;margin:10px 0 16px}
+.tabs{display:flex;gap:10px}.tab{flex:1;border:0;border-radius:18px;padding:13px;background:#fff;font-weight:900;box-shadow:var(--shadow)}
+.tab.active.boy{outline:2px solid var(--blue);background:var(--blueSoft)} .tab.active.girl{outline:2px solid var(--pink);background:var(--pinkSoft)}
+.card{background:#fff;border-radius:22px;padding:16px;box-shadow:var(--shadow);margin-top:13px}.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.name{font-size:22px;font-weight:900}.money{font-size:36px;font-weight:900}.small{font-size:12px;color:var(--muted)}
+.progress{height:12px;background:#edf1f5;border-radius:999px;margin-top:12px;overflow:hidden}.bar{height:100%;border-radius:999px;background:var(--blue)}
+.section{font-size:18px;font-weight:900;margin:20px 4px 10px}.list{display:flex;flex-direction:column;gap:10px}
+.item{background:#fff;border-radius:18px;padding:12px;box-shadow:var(--shadow);display:flex;align-items:center;gap:10px}.ico{width:44px;height:44px;border-radius:14px;background:#f4f7fa;display:grid;place-items:center;font-size:24px}.grow{flex:1}.item b{display:block}.price{font-weight:900;margin-top:3px}
+.done{border:0;border-radius:13px;background:var(--green);color:#fff;padding:10px 13px;font-weight:900}.iconBtn{border:0;background:#f2f5f8;border-radius:10px;padding:8px}
+.add{width:100%;border:2px dashed #9bcfff;border-radius:15px;background:#f8fcff;color:#248fe8;padding:12px;margin-top:11px;font-weight:900}
+.nav{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(560px,100%);display:grid;grid-template-columns:repeat(4,1fr);background:#fff;border-top:1px solid var(--line);padding:8px 4px calc(8px + env(safe-area-inset-bottom));z-index:20}.nav button{border:0;background:none;color:#718096;padding:8px 2px;font-size:12px}.nav .on{color:#258fe9;font-weight:900}
+.hidden{display:none}.hist{background:#fff;border-radius:16px;padding:12px;box-shadow:var(--shadow);display:flex;justify-content:space-between;gap:10px}.hist small{display:block;color:var(--muted);margin-top:4px}.danger{border:0;background:#fff0f0;color:#d84d54;border-radius:10px;padding:7px 9px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.sum{background:#fff;border-radius:20px;padding:17px;text-align:center;box-shadow:var(--shadow)}.sum b{display:block;font-size:26px;margin-top:6px}
+.salary{width:100%;border:0;border-radius:15px;background:#ff7d7d;color:#fff;padding:14px;font-size:16px;font-weight:900;margin-top:13px}
+.salaryHistory{margin-top:10px}.salaryRow{background:white;border-radius:15px;padding:12px;box-shadow:var(--shadow);margin-top:9px;display:flex;justify-content:space-between}
+dialog{border:0;border-radius:22px;padding:20px;width:min(92vw,430px);box-shadow:0 20px 60px #0004}dialog::backdrop{background:#0004}input{width:100%;padding:12px;border:1px solid #dce5ee;border-radius:12px;font-size:16px;margin:5px 0}
+.primary{width:100%;border:0;background:#258fe9;color:white;padding:12px;border-radius:12px;font-weight:900;margin-top:7px}.secondary{width:100%;border:0;background:#eef3f7;padding:11px;border-radius:12px;font-weight:800;margin-top:8px}
+.bonus{background:#fff9df;border:1px solid #ffe08a}.goalRow{display:flex;gap:8px;align-items:center}.goalRow input{max-width:130px}.syncOk{color:#2d9f5a}.syncWait{color:#718096}.syncErr{color:#d84d54}
+.toast{position:fixed;left:50%;top:24%;transform:translateX(-50%) scale(.9);background:white;border-radius:24px;padding:22px 26px;box-shadow:0 18px 60px #0004;text-align:center;z-index:50;opacity:0;pointer-events:none;transition:.2s}.toast.show{opacity:1;transform:translateX(-50%) scale(1)}.toast .star{font-size:46px}
+</style>
+</head>
+<body>
+<div class="app">
+<h1>🏠 おてつだい ちょきんちょう</h1>
+
+<section id="homeView">
+  <div class="tabs">
+    <button id="tabK" class="tab boy" onclick="setChild('こうめい')">👦 こうめい</button>
+    <button id="tabY" class="tab girl" onclick="setChild('ゆめの')">👧 ゆめの</button>
+  </div>
+  <div class="card">
+    <div class="row"><div><div id="childName" class="name"></div><div class="small">今月の合計</div></div><div id="monthTotal" class="money">0円</div></div>
+    <div class="progress"><div id="progressBar" class="bar" style="width:0%"></div></div>
+    <div class="row" style="margin-top:7px"><span id="goalText" class="small"></span><span id="syncText" class="small syncWait">☁️ 同期中…</span></div>
+  </div>
+
+  <div class="section">今日のおてつだい</div>
+  <div id="choreList" class="list"></div>
+  <button class="add" onclick="openChoreAdd()">＋ 新しいおてつだいを追加</button>
+  <button class="add bonus" onclick="openBonus()">⭐ ボーナスを追加</button>
+</section>
+
+<section id="historyView" class="hidden">
+  <div class="section">今月のれきし</div>
+  <div id="historyList" class="list"></div>
+</section>
+
+<section id="summaryView" class="hidden">
+  <div class="section">月のまとめ</div>
+  <div class="grid">
+    <div class="sum">👦 こうめい<b id="sumK">0円</b></div>
+    <div class="sum">👧 ゆめの<b id="sumY">0円</b></div>
+  </div>
+  <button class="salary" onclick="confirmSalary()">💵 今月のお給料を確定する</button>
+  <div class="section">過去のお給料</div>
+  <div id="salaryHistory" class="salaryHistory"></div>
+</section>
+
+<section id="settingsView" class="hidden">
+  <div class="section">せってい</div>
+  <div class="card">
+    <b>月の目標金額</b>
+    <div class="goalRow"><input id="goalInput" type="number" min="100" step="100"><button class="primary" onclick="saveGoal()">保存</button></div>
+    <p class="small">選択中の子どもの目標を変更します。</p>
+  </div>
+  <div class="card">
+    <b>おてつだい項目の編集</b>
+    <p class="small">ホーム画面の各項目にある「✏️」から名前・金額を変更できます。削除は非表示扱いなので過去の履歴は残ります。</p>
+  </div>
+</section>
+</div>
+
+<nav class="nav">
+<button id="navHome" class="on" onclick="showView('home')">🏠<br>ホーム</button>
+<button id="navHist" onclick="showView('history')">📖<br>れきし</button>
+<button id="navSum" onclick="showView('summary')">💰<br>まとめ</button>
+<button id="navSet" onclick="showView('settings')">⚙️<br>せってい</button>
+</nav>
+
+<dialog id="choreDialog">
+<h3 id="choreDialogTitle">おてつだい追加</h3>
+<input id="choreName" placeholder="例：玄関そうじ">
+<input id="chorePrice" type="number" min="1" placeholder="金額（円）">
+<input id="choreIcon" placeholder="絵文字（例：🧹）">
+<button class="primary" onclick="saveChore()">保存</button>
+<button id="deleteChoreBtn" class="danger" style="width:100%;margin-top:8px;display:none" onclick="deleteChore()">この項目を削除</button>
+<button class="secondary" onclick="choreDialog.close()">とじる</button>
+</dialog>
+
+<dialog id="bonusDialog">
+<h3>⭐ ボーナス追加</h3>
+<input id="bonusName" placeholder="例：自分から進んでやった">
+<input id="bonusAmount" type="number" min="1" placeholder="金額（円）">
+<button class="primary" onclick="saveBonus()">追加</button>
+<button class="secondary" onclick="bonusDialog.close()">とじる</button>
+</dialog>
+
+<div id="toast" class="toast"><div class="star">⭐</div><b id="toastText">やったね！</b></div>
+
+<script>
+const SB_URL="https://bgyqryhkamudqljcfcix.supabase.co", SB_KEY="sb_publishable_g6rOL7lVAuF5K615seO8cw_lxeZ3VvY";
+const HEADERS={apikey:SB_KEY,Authorization:"Bearer "+SB_KEY,"Content-Type":"application/json",Prefer:"return=representation"};
+let currentChild="こうめい", children=[], chores=[], records=[], salaries=[], goals=[], editingChore=null, loading=false;
+
+async function api(path,opt={}) {
+  const r=await fetch(SB_URL+"/rest/v1/"+path,{...opt,headers:{...HEADERS,...(opt.headers||{})}});
+  if(!r.ok) throw new Error(await r.text());
+  const t=await r.text(); return t?JSON.parse(t):[];
+}
+const yen=n=>Number(n||0).toLocaleString("ja-JP")+"円";
+function monthRange(){const d=new Date();return [new Date(d.getFullYear(),d.getMonth(),1).toISOString(),new Date(d.getFullYear(),d.getMonth()+1,1).toISOString()]}
+function child(name=currentChild){return children.find(c=>c.name===name)}
+function total(name){const c=child(name);return c?records.filter(r=>r.child_id===c.id).reduce((s,r)=>s+Number(r.amount),0):0}
+function goal(name=currentChild){const c=child(name);const g=c&&goals.find(x=>x.child_id===c.id);return g?Number(g.monthly_goal):2000}
+
+async function loadAll(silent=false){
+  if(loading)return; loading=true;
+  try{
+    if(!silent){syncText.textContent="☁️ 同期中…";syncText.className="small syncWait"}
+    children=await api("children?select=*&order=id");
+    chores=await api("chores?select=*&active=eq.true&order=id");
+    const [s,e]=monthRange();
+    records=await api("chore_records?select=*&completed_at=gte."+encodeURIComponent(s)+"&completed_at=lt."+encodeURIComponent(e)+"&order=completed_at.desc");
+    salaries=await api("salaries?select=*&order=year.desc,month.desc,child_id.asc");
+    try{goals=await api("child_goals?select=*")}catch(_){goals=[]}
+    syncText.textContent="☁️ 同期済み";syncText.className="small syncOk";
+    render();
+  }catch(e){
+    syncText.textContent="⚠️ 同期エラー";syncText.className="small syncErr";
+    if(!silent) alert("接続エラーが発生しました");
+  }finally{loading=false}
+}
+function setChild(n){currentChild=n;render()}
+function render(){
+  const c=child(); if(!c)return;
+  childName.textContent=currentChild;
+  tabK.classList.toggle("active",currentChild==="こうめい"); tabY.classList.toggle("active",currentChild==="ゆめの");
+  const t=total(currentChild), g=goal(currentChild);
+  monthTotal.textContent=yen(t); goalText.textContent="目標 "+yen(g)+" ／ あと "+yen(Math.max(0,g-t));
+  progressBar.style.width=Math.min(100,(t/g)*100)+"%"; progressBar.style.background=currentChild==="ゆめの"?"var(--pink)":"var(--blue)";
+  choreList.innerHTML="";
+  chores.filter(x=>x.child_id===c.id).forEach(x=>{
+    const d=document.createElement("div"); d.className="item";
+    d.innerHTML=`<div class="ico">${x.icon||"⭐"}</div><div class="grow"><b>${x.name}</b><div class="price">${yen(x.price)}</div></div><button class="iconBtn">✏️</button><button class="done">できた！</button>`;
+    d.querySelector(".iconBtn").onclick=()=>openChoreEdit(x);
+    d.querySelector(".done").onclick=()=>complete(x);
+    choreList.appendChild(d);
+  });
+  renderHistory(); renderSummary();
+  goalInput.value=g;
+}
+async function complete(x){
+  await api("chore_records",{method:"POST",body:JSON.stringify({child_id:x.child_id,chore_id:x.id,chore_name:x.name,amount:x.price,record_type:"chore"})});
+  showToast("やったね！ "+x.name+" "+yen(x.price)); await loadAll(true);
+}
+function showToast(t){toastText.textContent=t;toast.classList.add("show");setTimeout(()=>toast.classList.remove("show"),1300)}
+function renderHistory(){
+  historyList.innerHTML="";
+  const c=child(), rows=records.filter(r=>r.child_id===c.id);
+  if(!rows.length){historyList.innerHTML='<div class="card small">今月の記録はまだありません。</div>';return}
+  rows.forEach(r=>{
+    const d=document.createElement("div");d.className="hist";
+    d.innerHTML=`<div><b>${r.record_type==="bonus"?"⭐ ":""}${r.chore_name}</b><small>${new Date(r.completed_at).toLocaleString("ja-JP")}</small></div><div><b>${yen(r.amount)}</b> <button class="danger">取消</button></div>`;
+    d.querySelector("button").onclick=()=>removeRecord(r.id); historyList.appendChild(d);
+  });
+}
+async function removeRecord(id){if(!confirm("この記録を取り消しますか？"))return;await api("chore_records?id=eq."+id,{method:"DELETE"});await loadAll()}
+function openChoreAdd(){editingChore=null;choreDialogTitle.textContent="おてつだい追加";choreName.value="";chorePrice.value="";choreIcon.value="⭐";deleteChoreBtn.style.display="none";choreDialog.showModal()}
+function openChoreEdit(x){editingChore=x;choreDialogTitle.textContent="おてつだい編集";choreName.value=x.name;chorePrice.value=x.price;choreIcon.value=x.icon||"⭐";deleteChoreBtn.style.display="block";choreDialog.showModal()}
+async function saveChore(){
+  const c=child(),name=choreName.value.trim(),price=Number(chorePrice.value),icon=choreIcon.value.trim()||"⭐"; if(!name||!price)return;
+  if(editingChore) await api("chores?id=eq."+editingChore.id,{method:"PATCH",body:JSON.stringify({name,price,icon})});
+  else await api("chores",{method:"POST",body:JSON.stringify({child_id:c.id,name,price,icon,active:true})});
+  choreDialog.close();await loadAll();
+}
+async function deleteChore(){if(!editingChore||!confirm("この項目を削除しますか？"))return;await api("chores?id=eq."+editingChore.id,{method:"PATCH",body:JSON.stringify({active:false})});choreDialog.close();await loadAll()}
+function openBonus(){bonusName.value="";bonusAmount.value="";bonusDialog.showModal()}
+async function saveBonus(){const c=child(),n=bonusName.value.trim(),a=Number(bonusAmount.value);if(!n||!a)return;await api("chore_records",{method:"POST",body:JSON.stringify({child_id:c.id,chore_id:null,chore_name:n,amount:a,record_type:"bonus"})});bonusDialog.close();showToast("ボーナス "+yen(a)+"！");await loadAll(true)}
+function renderSummary(){
+  sumK.textContent=yen(total("こうめい")); sumY.textContent=yen(total("ゆめの"));
+  salaryHistory.innerHTML="";
+  const grouped={};
+  salaries.forEach(s=>{const key=s.year+"-"+String(s.month).padStart(2,"0"); grouped[key]??=[];grouped[key].push(s)});
+  Object.keys(grouped).slice(0,12).forEach(k=>{
+    const row=document.createElement("div");row.className="salaryRow";
+    const vals=grouped[k], kk=vals.find(v=>child("こうめい")?.id===v.child_id), yy=vals.find(v=>child("ゆめの")?.id===v.child_id);
+    row.innerHTML=`<span>${k}</span><span>👦 ${yen(kk?.amount||0)}　👧 ${yen(yy?.amount||0)}</span>`;salaryHistory.appendChild(row)
+  });
+  if(!Object.keys(grouped).length) salaryHistory.innerHTML='<div class="card small">まだお給料履歴はありません。</div>';
+}
+async function confirmSalary(){
+  const d=new Date(),year=d.getFullYear(),month=d.getMonth()+1;
+  if(!confirm(`${year}年${month}月のお給料を確定しますか？\n\nこうめい ${yen(total("こうめい"))}\nゆめの ${yen(total("ゆめの"))}`))return;
+  for(const c of children){
+    const existing=salaries.find(s=>s.child_id===c.id&&s.year===year&&s.month===month);
+    if(existing) await api("salaries?id=eq."+existing.id,{method:"PATCH",body:JSON.stringify({amount:total(c.name),paid_at:new Date().toISOString()})});
+    else await api("salaries",{method:"POST",body:JSON.stringify({child_id:c.id,year,month,amount:total(c.name)})});
+  }
+  alert("今月のお給料を確定しました！\nお手伝い履歴はそのまま残ります。");await loadAll();
+}
+async function saveGoal(){
+  const c=child(),v=Number(goalInput.value);if(!v)return;
+  const ex=goals.find(g=>g.child_id===c.id);
+  try{
+    if(ex) await api("child_goals?child_id=eq."+c.id,{method:"PATCH",body:JSON.stringify({monthly_goal:v})});
+    else await api("child_goals",{method:"POST",body:JSON.stringify({child_id:c.id,monthly_goal:v})});
+    await loadAll();alert("目標金額を保存しました");
+  }catch(e){alert("先に追加SQLを実行してください");}
+}
+function showView(v){
+  ["home","history","summary","settings"].forEach(x=>document.getElementById(x+"View").classList.add("hidden"));
+  document.getElementById(v+"View").classList.remove("hidden");
+  document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("on"));
+  if(v==="home")navHome.classList.add("on"); if(v==="history")navHist.classList.add("on"); if(v==="summary")navSum.classList.add("on"); if(v==="settings")navSet.classList.add("on");
+  render();
+}
+loadAll(); setInterval(()=>loadAll(true),5000);
+</script>
+</body>
+</html>

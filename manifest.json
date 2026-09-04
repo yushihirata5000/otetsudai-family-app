@@ -1,0 +1,8 @@
+{
+  "name": "おてつだい ちょきんちょう",
+  "short_name": "おてつだい",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f7fbff",
+  "theme_color": "#f7fbff"
+}
