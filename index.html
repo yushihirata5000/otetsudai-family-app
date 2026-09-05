@@ -223,7 +223,7 @@ async function saveGoal(){
   }catch(e){alert("先に追加SQLを実行してください");}
 }
 function showView(v){
-  ["home","history","summary","settings"].forEach(x=>document.getElementById(x+"View").classList.add("hidden"));
+ if(v==="settings" && prompt("おとな用パスコードを入力してください")!=="1013"){alert("パスコードが違います");return;} ["home","history","summary","settings"].forEach(x=>document.getElementById(x+"View").classList.add("hidden"));
   document.getElementById(v+"View").classList.remove("hidden");
   document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("on"));
   if(v==="home")navHome.classList.add("on"); if(v==="history")navHist.classList.add("on"); if(v==="summary")navSum.classList.add("on"); if(v==="settings")navSet.classList.add("on");
