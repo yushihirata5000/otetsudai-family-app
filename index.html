@@ -165,9 +165,39 @@ function render(){
   goalInput.value=g;
 }
 async function complete(x){
-  await api("chore_records",{method:"POST",body:JSON.stringify({child_id:x.child_id,chore_id:x.id,chore_name:x.name,amount:x.price,record_type:"pending"})});
-  showToast("できた！ パパ・ママの確認待ちだよ😊");
+  if(x._submitting)return;
+
+  const today=new Date().toDateString();
+  const already=records.some(r=>
+    r.child_id===x.child_id &&
+    r.chore_id===x.id &&
+    new Date(r.completed_at).toDateString()===today
+  );
+
+  if(already){
+    showToast("今日はもう報告したよ😊");
+    return;
+  }
+
+  x._submitting=true;
+  try{
+    await api("chore_records",{
+      method:"POST",
+      body:JSON.stringify({
+        child_id:x.child_id,
+        chore_id:x.id,
+        chore_name:x.name,
+        amount:x.price,
+        record_type:"pending"
+      })
+    });
+    await loadAll(true);
+    showToast("できた！ パパ・ママの確認待ちだよ😊");
+  }finally{
+    x._submitting=false;
+  }
 }
+  
 function showToast(t){toastText.textContent=t;toast.classList.add("show");setTimeout(()=>toast.classList.remove("show"),1300)}
 function renderHistory(){
   historyList.innerHTML="";
