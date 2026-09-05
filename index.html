@@ -125,7 +125,7 @@ async function api(path,opt={}) {
 const yen=n=>Number(n||0).toLocaleString("ja-JP")+"円";
 function monthRange(){const d=new Date();return [new Date(d.getFullYear(),d.getMonth(),1).toISOString(),new Date(d.getFullYear(),d.getMonth()+1,1).toISOString()]}
 function child(name=currentChild){return children.find(c=>c.name===name)}
-function total(name){const c=child(name);return c?records.filter(r=>r.child_id===c.id).reduce((s,r)=>s+Number(r.amount),0):0}
+function total(name){const c=child(name);return c?records.filter(r=>r.child_id===c.id&&r.record_type!=="pending").reduce((s,r)=>s+Number(r.amount),0):0}
 function goal(name=currentChild){const c=child(name);const g=c&&goals.find(x=>x.child_id===c.id);return g?Number(g.monthly_goal):2000}
 
 async function loadAll(silent=false){
@@ -165,8 +165,8 @@ function render(){
   goalInput.value=g;
 }
 async function complete(x){
-  await api("chore_records",{method:"POST",body:JSON.stringify({child_id:x.child_id,chore_id:x.id,chore_name:x.name,amount:x.price,record_type:"chore"})});
-  showToast("やったね！ "+x.name+" "+yen(x.price)); await loadAll(true);
+  await api("chore_records",{method:"POST",body:JSON.stringify({child_id:x.child_id,chore_id:x.id,chore_name:x.name,amount:x.price,record_type:"pending"})});
+  showToast("できた！ パパ・ママの確認待ちだよ😊");
 }
 function showToast(t){toastText.textContent=t;toast.classList.add("show");setTimeout(()=>toast.classList.remove("show"),1300)}
 function renderHistory(){
@@ -175,9 +175,36 @@ function renderHistory(){
   if(!rows.length){historyList.innerHTML='<div class="card small">今月の記録はまだありません。</div>';return}
   rows.forEach(r=>{
     const d=document.createElement("div");d.className="hist";
-    d.innerHTML=`<div><b>${r.record_type==="bonus"?"⭐ ":""}${r.chore_name}</b><small>${new Date(r.completed_at).toLocaleString("ja-JP")}</small></div><div><b>${yen(r.amount)}</b> <button class="danger">取消</button></div>`;
-    d.querySelector("button").onclick=()=>removeRecord(r.id); historyList.appendChild(d);
+    d.innerHTML=`<div><b>${r.record_type==="bonus"?"⭐ ":""}${r.chore_name}</b><small>${new Date(r.completed_at).toLocaleString("ja-JP")}</small></div><div><b>${yen(r.amount)}</b> ${r.record_type==="pending"?'<small>確認待ち</small> <button class="done approve">承認</button> <button class="danger reject">却下</button>':'<button class="danger cancel">取消</button>'}</div>`;
+
+if(r.record_type==="pending"){
+  d.querySelector(".approve").onclick=()=>approveRecord(r.id);
+  d.querySelector(".reject").onclick=()=>rejectRecord(r.id);
+}else{
+  d.querySelector(".cancel").onclick=()=>removeRecord(r.id);
+}
+    historyList.appendChild(d);
   });
+}
+  async function approveRecord(id){
+  if(prompt("おとな用パスコードを入力してください")!=="1013"){
+    alert("パスコードが違います");
+    return;
+  }
+  await api("chore_records?id=eq."+id,{
+    method:"PATCH",
+    body:JSON.stringify({record_type:"chore"})
+  });
+  await loadAll();
+  showToast("承認しました！🎉");
+}async function rejectRecord(id){
+  if(prompt("おとな用パスコードを入力してください")!=="1013"){
+    alert("パスコードが違います");
+    return;
+  }
+  await api("chore_records?id=eq."+id,{method:"DELETE"});
+  await loadAll();
+  showToast("却下しました");
 }
 async function removeRecord(id){if(!confirm("この記録を取り消しますか？"))return;await api("chore_records?id=eq."+id,{method:"DELETE"});await loadAll()}
 function openChoreAdd(){editingChore=null;choreDialogTitle.textContent="おてつだい追加";choreName.value="";chorePrice.value="";choreIcon.value="⭐";deleteChoreBtn.style.display="none";choreDialog.showModal()}
